@@ -34,12 +34,14 @@ A powerful and intuitive drag-and-drop form builder built with React and TypeScr
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/jubayer17/react-grid-layout.git
 cd react-grid-layout
 ```
 
 2. Install dependencies
+
 ```bash
 npm install
 # or
@@ -47,6 +49,7 @@ yarn install
 ```
 
 3. Start the development server
+
 ```bash
 npm run dev
 # or
