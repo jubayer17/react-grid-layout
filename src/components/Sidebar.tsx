@@ -3,14 +3,14 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 
 const Sidebar: React.FC = () => {
     const tools = [
-        { id: 'row-container', name: 'Row', icon: '☰', type: 'row' },
-        { id: 'column-container', name: 'Column', icon: '▭', type: 'column' },
-        { id: 'text-item', name: 'Text', icon: '📝', type: 'item' },
-        { id: 'image-item', name: 'Image', icon: '🖼️', type: 'item' },
-        { id: 'email-item', name: 'Email', icon: '📧', type: 'item' },
-        { id: 'input-item', name: 'Input', icon: '✏️', type: 'item' },
-        { id: 'name-item', name: 'Name', icon: '👤', type: 'item' },
-        { id: 'phone-item', name: 'Phone', icon: '📞', type: 'item' }
+        { id: 'row-container', name: 'Row', type: 'row' },
+        { id: 'column-container', name: 'Column', type: 'column' },
+        { id: 'text-item', name: 'Text', type: 'item' },
+        { id: 'image-item', name: 'Image', type: 'item' },
+        { id: 'email-item', name: 'Email', type: 'item' },
+        { id: 'input-item', name: 'Input', type: 'item' },
+        { id: 'name-item', name: 'Name', type: 'item' },
+        { id: 'phone-item', name: 'Phone', type: 'item' }
     ];
 
     const categories = ['row', 'column', 'item'];
@@ -32,16 +32,14 @@ const Sidebar: React.FC = () => {
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className={`p-3 mb-2 bg-white/10 border border-white/20 rounded cursor-grab flex items-center gap-2.5 select-none hover:bg-white/15 ${snapshot.isDragging ? 'bg-white/25 border-white/40' : ''
+                                                className={`p-3 mb-2 bg-white/10 border border-white/20 rounded cursor-grab flex items-center justify-center select-none hover:bg-white/15 ${snapshot.isDragging ? 'bg-white/25 border-white/40' : ''
                                                     }`}
                                                 style={provided.draggableProps.style}
                                             >
-                                                <span className="text-lg">{tool.icon}</span>
                                                 <span>{tool.name}</span>
                                             </div>
                                             {snapshot.isDragging && (
-                                                <div className="p-3 mb-2 bg-white/10 border border-white/20 border-dashed rounded flex items-center gap-2.5 opacity-40">
-                                                    <span className="text-lg">{tool.icon}</span>
+                                                <div className="p-3 mb-2 bg-white/10 border border-white/20 border-dashed rounded flex items-center justify-center opacity-40">
                                                     <span>{tool.name}</span>
                                                 </div>
                                             )}
