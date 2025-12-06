@@ -21,8 +21,7 @@ const Row: React.FC<RowProps> = ({
     index,
     onColumnResize,
     onItemClick,
-    onRowClick,
-    onColumnClick
+    onRowClick
 }) => {
     return (
         <Draggable draggableId={row.id} index={index}>
@@ -60,7 +59,7 @@ const Row: React.FC<RowProps> = ({
                                         }`}
                                 >
                                     {columns.map((col, idx) => {
-                                        const items = col.itemIds
+                                        const colItems = col.itemIds
                                             .map(itemId => items[itemId])
                                             .filter(Boolean);
 
@@ -72,7 +71,6 @@ const Row: React.FC<RowProps> = ({
                                                 index={idx}
                                                 onResize={onColumnResize}
                                                 onItemClick={onItemClick}
-                                                onColumnClick={onColumnClick}
                                             />
                                         );
                                     })}

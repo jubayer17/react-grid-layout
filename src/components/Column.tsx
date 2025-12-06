@@ -9,6 +9,7 @@ interface ColumnProps {
     index: number;
     onResize?: (columnId: string, newWidth: number) => void;
     onItemClick?: (itemId: string) => void;
+    onColumnClick?: (columnId: string) => void;
 }
 
 const Column: React.FC<ColumnProps> = ({
