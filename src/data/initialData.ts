@@ -4,7 +4,7 @@ export const initialData: InitialData = {
     items: {
         'r-1-c-1-i-1': { id: 'r-1-c-1-i-1', content: 'Sample Text 1', type: 'text' },
         'r-1-c-1-i-2': { id: 'r-1-c-1-i-2', content: 'Sample Image 1', type: 'image' },
-        'r-1-c-2-i-1': { id: 'r-1-c-2-i-1', content: 'Sample Text 2', type: 'text' },
+        'r-1-c-2-i-1': { id: 'r-1-c-2-i-1', content: 'Sample Text 1', type: 'text' },
     },
     columns: {
         'r-1-c-1': {
