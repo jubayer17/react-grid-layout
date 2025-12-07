@@ -318,19 +318,68 @@ const App: React.FC = () => {
   const handleDeleteRow = (rowId: string) => {
     const updatedRowOrder = data.rowOrder.filter(id => id !== rowId);
     const updatedRows = { ...data.rows };
+    const updatedColumns = { ...data.columns };
+    const updatedItems = { ...data.items };
+    
     delete updatedRows[rowId];
 
-    // rename remaining rows to keep sequence (A, B, C...)
-    updatedRowOrder.forEach((id, index) => {
-      if (updatedRows[id]) {
-        updatedRows[id] = {
-          ...updatedRows[id],
-          title: `Row ${String.fromCharCode(65 + index)}`
+    // renumber rows and update all related IDs
+    const rowIdMap: Record<string, string> = {};
+    updatedRowOrder.forEach((oldRowId, index) => {
+      const newRowId = `r-${index + 1}`;
+      rowIdMap[oldRowId] = newRowId;
+      
+      if (updatedRows[oldRowId]) {
+        const row = updatedRows[oldRowId];
+        const newColumnIds: string[] = [];
+        
+        // update column IDs for this row
+        row.columnIds.forEach((oldColId, colIndex) => {
+          const newColId = `${newRowId}-c-${colIndex + 1}`;
+          
+          if (updatedColumns[oldColId]) {
+            const col = updatedColumns[oldColId];
+            const newItemIds: string[] = [];
+            
+            // update item IDs for this column
+            col.itemIds.forEach((oldItemId, itemIndex) => {
+              const newItemId = `${newColId}-i-${itemIndex + 1}`;
+              
+              if (updatedItems[oldItemId]) {
+                updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
+                delete updatedItems[oldItemId];
+              }
+              newItemIds.push(newItemId);
+            });
+            
+            updatedColumns[newColId] = {
+              ...col,
+              id: newColId,
+              title: `Column ${String.fromCharCode(65 + colIndex)}`,
+              itemIds: newItemIds
+            };
+            delete updatedColumns[oldColId];
+          }
+          newColumnIds.push(newColId);
+        });
+        
+        updatedRows[newRowId] = {
+          ...row,
+          id: newRowId,
+          title: `Row ${String.fromCharCode(65 + index)}`,
+          columnIds: newColumnIds
         };
+        delete updatedRows[oldRowId];
       }
     });
 
-    setData({ ...data, rowOrder: updatedRowOrder, rows: updatedRows });
+    setData({
+      ...data,
+      rowOrder: updatedRowOrder.map((oldId, idx) => `r-${idx + 1}`),
+      rows: updatedRows,
+      columns: updatedColumns,
+      items: updatedItems
+    });
   };
 
   const handleDeleteColumn = (columnId: string) => {
@@ -342,22 +391,49 @@ const App: React.FC = () => {
     const row = data.rows[rowId];
     const updatedColIds = row.columnIds.filter(id => id !== columnId);
     const updatedCols = { ...data.columns };
+    const updatedItems = { ...data.items };
+    
     delete updatedCols[columnId];
 
-    // rename remaining columns to keep sequence
-    updatedColIds.forEach((id, index) => {
-      if (updatedCols[id]) {
-        updatedCols[id] = {
-          ...updatedCols[id],
-          title: `Column ${String.fromCharCode(65 + index)}`
+    // extract row number
+    const rowNum = rowId.match(/r-(\d+)/)?.[1] || '1';
+    
+    // renumber columns and items
+    const newColumnIds: string[] = [];
+    updatedColIds.forEach((oldColId, colIndex) => {
+      const newColId = `r-${rowNum}-c-${colIndex + 1}`;
+      
+      if (updatedCols[oldColId]) {
+        const col = updatedCols[oldColId];
+        const newItemIds: string[] = [];
+        
+        // update item IDs
+        col.itemIds.forEach((oldItemId, itemIndex) => {
+          const newItemId = `${newColId}-i-${itemIndex + 1}`;
+          
+          if (updatedItems[oldItemId]) {
+            updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
+            delete updatedItems[oldItemId];
+          }
+          newItemIds.push(newItemId);
+        });
+        
+        updatedCols[newColId] = {
+          ...col,
+          id: newColId,
+          title: `Column ${String.fromCharCode(65 + colIndex)}`,
+          itemIds: newItemIds
         };
+        delete updatedCols[oldColId];
       }
+      newColumnIds.push(newColId);
     });
 
     setData({
       ...data,
-      rows: { ...data.rows, [rowId]: { ...row, columnIds: updatedColIds } },
-      columns: updatedCols
+      rows: { ...data.rows, [rowId]: { ...row, columnIds: newColumnIds } },
+      columns: updatedCols,
+      items: updatedItems
     });
   };
 
@@ -372,9 +448,22 @@ const App: React.FC = () => {
     const updatedItems = { ...data.items };
     delete updatedItems[itemId];
 
-    // renumber remaining items by type in this column
+    // renumber items with updated IDs
+    const newItemIds: string[] = [];
+    updatedItemIds.forEach((oldItemId, index) => {
+      const colPrefix = colId.match(/(r-\d+-c-\d+)/)?.[1] || colId;
+      const newItemId = `${colPrefix}-i-${index + 1}`;
+      
+      if (updatedItems[oldItemId]) {
+        updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
+        delete updatedItems[oldItemId];
+      }
+      newItemIds.push(newItemId);
+    });
+
+    // renumber item content by type
     const itemsByType: Record<string, string[]> = {};
-    updatedItemIds.forEach(id => {
+    newItemIds.forEach(id => {
       const item = updatedItems[id];
       if (item) {
         const type = item.type || 'text';
@@ -386,12 +475,12 @@ const App: React.FC = () => {
     // update content numbers for each type
     Object.keys(itemsByType).forEach(type => {
       const typePrefix = type === 'text' ? 'Sample Text' :
-        type === 'image' ? 'Sample Image' :
-          type === 'email' ? 'Email' :
-            type === 'input' ? 'Input' :
-              type === 'name' ? 'Name' :
-                type === 'phone' ? 'Phone' : 'Item';
-
+                        type === 'image' ? 'Sample Image' :
+                        type === 'email' ? 'Email' :
+                        type === 'input' ? 'Input' :
+                        type === 'name' ? 'Name' :
+                        type === 'phone' ? 'Phone' : 'Item';
+      
       itemsByType[type].forEach((id, index) => {
         updatedItems[id] = {
           ...updatedItems[id],
@@ -402,12 +491,10 @@ const App: React.FC = () => {
 
     setData({
       ...data,
-      columns: { ...data.columns, [colId]: { ...column, itemIds: updatedItemIds } },
+      columns: { ...data.columns, [colId]: { ...column, itemIds: newItemIds } },
       items: updatedItems
     });
-  };
-
-  // generate hierarchical layout structure for display
+  };  // generate hierarchical layout structure for display
   const getLayoutData = () => {
     const layout = data.rowOrder.map(rowId => {
       const row = data.rows[rowId];
