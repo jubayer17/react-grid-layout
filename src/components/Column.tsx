@@ -17,12 +17,14 @@ const Column: React.FC<ColumnProps> = ({
     items,
     index,
     onResize,
-    onItemClick
+    onItemClick,
+    onColumnClick
 }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [width, setWidth] = useState(column.width || 280);
     const colRef = useRef<HTMLDivElement>(null);
 
+    // handle column resize with mouse drag
     useEffect(() => {
         if (!isResizing) return;
 
@@ -56,11 +58,19 @@ const Column: React.FC<ColumnProps> = ({
                         colRef.current = el;
                     }}
                     {...provided.draggableProps}
-                    className={`relative min-w-[200px] h-[400px] bg-white border border-gray-200 rounded flex flex-col shrink-0 ${snapshot.isDragging ? 'opacity-80 shadow-lg' : ''
-                        }`}
+                    className={`relative min-w-[200px] bg-white border border-gray-200 rounded flex flex-col shrink-0 ${snapshot.isDragging ? 'opacity-80 shadow-lg' : ''}`}
                     style={{ ...provided.draggableProps.style, width: `${width}px` }}
                 >
-                    <div {...provided.dragHandleProps} className="p-3 bg-blue-500 text-white font-medium cursor-grab select-none flex items-center justify-between rounded-t">
+                    <div
+                        {...provided.dragHandleProps}
+                        className="p-3 bg-blue-500 text-white font-medium cursor-grab select-none flex items-center justify-between rounded-t"
+                        onClick={(e) => {
+                            if (onColumnClick) {
+                                e.stopPropagation();
+                                onColumnClick(column.id);
+                            }
+                        }}
+                    >
                         <div className="flex items-center gap-2">
                             <span>▭</span>
                             <span>{column.title}</span>
@@ -72,8 +82,7 @@ const Column: React.FC<ColumnProps> = ({
                             <div
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
-                                className={`flex-1 p-3 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-blue-50' : ''
-                                    }`}
+                                className={`flex-1 p-3 overflow-y-auto ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
                             >
                                 {items.map((item, idx) => (
                                     <Item
@@ -84,6 +93,7 @@ const Column: React.FC<ColumnProps> = ({
                                     />
                                 ))}
                                 {provided.placeholder}
+                                {/* show hint when column is empty */}
                                 {items.length === 0 && !snapshot.isDraggingOver && (
                                     <div className="p-2.5 text-center text-gray-400 text-xs w-full overflow-hidden">Drop items here</div>
                                 )}
@@ -91,9 +101,9 @@ const Column: React.FC<ColumnProps> = ({
                         )}
                     </Droppable>
 
+                    {/* resize handle on right edge */}
                     <div
-                        className={`absolute top-0 right-0 w-1.5 h-full cursor-ew-resize bg-transparent hover:bg-gray-200 ${isResizing ? 'bg-blue-500' : ''
-                            }`}
+                        className={`absolute top-0 right-0 w-1.5 h-full cursor-ew-resize bg-transparent hover:bg-gray-200 ${isResizing ? 'bg-blue-500' : ''}`}
                         onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
