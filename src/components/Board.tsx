@@ -34,6 +34,7 @@ const Board: React.FC<BoardProps> = ({
                         const row = data.rows[rowId];
                         if (!row) return null;
 
+                        // get columns for this row
                         const cols = row.columnIds
                             .map(colId => data.columns[colId])
                             .filter(Boolean);
