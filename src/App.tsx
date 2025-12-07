@@ -49,16 +49,16 @@ const App: React.FC = () => {
     }
 
     // dropped in trash - delete element
-    if (['TRASH', 'TRASH-COL', 'TRASH-ITEM'].includes(destination.droppableId)) {
+    if (destination.droppableId === 'TRASH' || destination.droppableId === 'TRASH-COL' || destination.droppableId.startsWith('TRASH-ITEM')) {
       if (type === 'row') handleDeleteRow(draggableId);
       else if (type === 'column') handleDeleteColumn(draggableId);
-      else if (type === 'item') handleDeleteItem(draggableId);
+      else handleDeleteItem(draggableId);
       return;
     }
 
     if (type === 'row') handleRowReorder(source, destination, draggableId);
     else if (type === 'column') handleColumnMove(source, destination, draggableId);
-    else if (type === 'item') handleItemMove(source, destination, draggableId);
+    else handleItemMove(source, destination, draggableId);
   };
 
   const handleSidebarDrop = (itemType: string, destination: DraggableLocation) => {
@@ -618,7 +618,8 @@ const App: React.FC = () => {
             )}
           </Droppable>
 
-          <Droppable droppableId="TRASH-ITEM" type="item">
+          {/* Accept items in trash - no type needed since Column Droppables don't specify type */}
+          <Droppable droppableId="TRASH-ITEM">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
