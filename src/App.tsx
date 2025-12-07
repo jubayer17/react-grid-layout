@@ -375,7 +375,7 @@ const App: React.FC = () => {
 
     setData({
       ...data,
-      rowOrder: updatedRowOrder.map((oldId, idx) => `r-${idx + 1}`),
+      rowOrder: updatedRowOrder.map((_, idx) => `r-${idx + 1}`),
       rows: updatedRows,
       columns: updatedColumns,
       items: updatedItems
