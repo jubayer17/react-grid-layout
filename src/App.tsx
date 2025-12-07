@@ -187,8 +187,20 @@ const App: React.FC = () => {
       updatedCols.splice(source.index, 1);
       updatedCols.splice(destination.index, 0, columnId);
 
+      // rename columns to keep sequence
+      const updatedColumns = { ...data.columns };
+      updatedCols.forEach((colId, index) => {
+        if (updatedColumns[colId]) {
+          updatedColumns[colId] = {
+            ...updatedColumns[colId],
+            title: `Column ${String.fromCharCode(65 + index)}`
+          };
+        }
+      });
+
       setData({
         ...data,
+        columns: updatedColumns,
         rows: { ...data.rows, [sourceRow.id]: { ...sourceRow, columnIds: updatedCols } }
       });
     } else {
@@ -199,8 +211,30 @@ const App: React.FC = () => {
       const destCols = [...destRow.columnIds];
       destCols.splice(destination.index, 0, columnId);
 
+      // rename columns in both rows
+      const updatedColumns = { ...data.columns };
+      
+      sourceCols.forEach((colId, index) => {
+        if (updatedColumns[colId]) {
+          updatedColumns[colId] = {
+            ...updatedColumns[colId],
+            title: `Column ${String.fromCharCode(65 + index)}`
+          };
+        }
+      });
+
+      destCols.forEach((colId, index) => {
+        if (updatedColumns[colId]) {
+          updatedColumns[colId] = {
+            ...updatedColumns[colId],
+            title: `Column ${String.fromCharCode(65 + index)}`
+          };
+        }
+      });
+
       setData({
         ...data,
+        columns: updatedColumns,
         rows: {
           ...data.rows,
           [sourceRow.id]: { ...sourceRow, columnIds: sourceCols },
