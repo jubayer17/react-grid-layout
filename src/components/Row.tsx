@@ -21,7 +21,8 @@ const Row: React.FC<RowProps> = ({
     index,
     onColumnResize,
     onItemClick,
-    onRowClick
+    onRowClick,
+    onColumnClick
 }) => {
     return (
         <Draggable draggableId={row.id} index={index}>
@@ -29,8 +30,7 @@ const Row: React.FC<RowProps> = ({
                 <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className={`mb-5 bg-white border border-gray-200 rounded overflow-hidden ${snapshot.isDragging ? 'opacity-80 shadow-lg' : ''
-                        }`}
+                    className={`mb-5 bg-white border border-gray-200 rounded overflow-hidden ${snapshot.isDragging ? 'opacity-80 shadow-lg' : ''}`}
                     style={provided.draggableProps.style}
                 >
                     <div
@@ -55,10 +55,10 @@ const Row: React.FC<RowProps> = ({
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={`flex gap-3 min-h-[150px] p-2 rounded ${snapshot.isDraggingOver ? 'bg-gray-100' : ''
-                                        }`}
+                                    className={`flex gap-3 min-h-[150px] p-2 rounded ${snapshot.isDraggingOver ? 'bg-gray-100' : ''}`}
                                 >
                                     {columns.map((col, idx) => {
+                                        // get items for this column
                                         const colItems = col.itemIds
                                             .map(itemId => items[itemId])
                                             .filter(Boolean);
@@ -71,10 +71,12 @@ const Row: React.FC<RowProps> = ({
                                                 index={idx}
                                                 onResize={onColumnResize}
                                                 onItemClick={onItemClick}
+                                                onColumnClick={onColumnClick}
                                             />
                                         );
                                     })}
                                     {provided.placeholder}
+                                    {/* show hint when row is empty */}
                                     {columns.length === 0 && !snapshot.isDraggingOver && (
                                         <div className="w-full p-10 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded">Drag columns here</div>
                                     )}
