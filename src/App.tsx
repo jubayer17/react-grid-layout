@@ -372,6 +372,34 @@ const App: React.FC = () => {
     const updatedItems = { ...data.items };
     delete updatedItems[itemId];
 
+    // renumber remaining items by type in this column
+    const itemsByType: Record<string, string[]> = {};
+    updatedItemIds.forEach(id => {
+      const item = updatedItems[id];
+      if (item) {
+        const type = item.type || 'text';
+        if (!itemsByType[type]) itemsByType[type] = [];
+        itemsByType[type].push(id);
+      }
+    });
+
+    // update content numbers for each type
+    Object.keys(itemsByType).forEach(type => {
+      const typePrefix = type === 'text' ? 'Sample Text' :
+                        type === 'image' ? 'Sample Image' :
+                        type === 'email' ? 'Email' :
+                        type === 'input' ? 'Input' :
+                        type === 'name' ? 'Name' :
+                        type === 'phone' ? 'Phone' : 'Item';
+      
+      itemsByType[type].forEach((id, index) => {
+        updatedItems[id] = {
+          ...updatedItems[id],
+          content: `${typePrefix} ${index + 1}`
+        };
+      });
+    });
+
     setData({
       ...data,
       columns: { ...data.columns, [colId]: { ...column, itemIds: updatedItemIds } },
