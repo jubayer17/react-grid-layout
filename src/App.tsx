@@ -380,77 +380,84 @@ const App: React.FC = () => {
   };
 
   const handleDeleteRow = (rowId: string) => {
-    const updatedRowOrder = data.rowOrder.filter(id => id !== rowId);
-    const updatedRows = { ...data.rows };
+    const row = data.rows[rowId];
+    if (!row) return;
+
+    // delete all columns and items belonging to this row
     const updatedColumns = { ...data.columns };
     const updatedItems = { ...data.items };
 
+    row.columnIds.forEach(colId => {
+      const col = data.columns[colId];
+      if (col) {
+        col.itemIds.forEach(itemId => {
+          delete updatedItems[itemId];
+        });
+      }
+      delete updatedColumns[colId];
+    });
+
+    const updatedRowOrder = data.rowOrder.filter(id => id !== rowId);
+    const updatedRows = { ...data.rows };
     delete updatedRows[rowId];
 
-    // renumber rows and update all related IDs
-    const rowIdMap: Record<string, string> = {};
+    // create new objects for renumbered rows
+    const finalRows: Record<string, { id: string; title: string; columnIds: string[] }> = {};
+    const finalColumns: Record<string, { id: string; title: string; itemIds: string[]; width?: number }> = {};
+    const finalItems: Record<string, { id: string; content: string; type?: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {};
+
+    // renumber remaining rows
     updatedRowOrder.forEach((oldRowId, index) => {
       const newRowId = `r-${index + 1}`;
-      rowIdMap[oldRowId] = newRowId;
+      const row = updatedRows[oldRowId];
 
-      if (updatedRows[oldRowId]) {
-        const row = updatedRows[oldRowId];
+      if (row) {
         const newColumnIds: string[] = [];
 
-        // update column IDs for this row
+        // renumber columns for this row
         row.columnIds.forEach((oldColId, colIndex) => {
           const newColId = `${newRowId}-c-${colIndex + 1}`;
+          const col = updatedColumns[oldColId];
 
-          if (updatedColumns[oldColId]) {
-            const col = updatedColumns[oldColId];
+          if (col) {
             const newItemIds: string[] = [];
 
-            // update item IDs for this column
+            // renumber items for this column
             col.itemIds.forEach((oldItemId, itemIndex) => {
               const newItemId = `${newColId}-i-${itemIndex + 1}`;
+              const item = updatedItems[oldItemId];
 
-              if (updatedItems[oldItemId]) {
-                updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
-                if (oldItemId !== newItemId) {
-                  delete updatedItems[oldItemId];
-                }
+              if (item) {
+                finalItems[newItemId] = { ...item, id: newItemId };
               }
               newItemIds.push(newItemId);
             });
 
-            updatedColumns[newColId] = {
+            finalColumns[newColId] = {
               ...col,
               id: newColId,
               title: `Column ${String.fromCharCode(65 + colIndex)}`,
               itemIds: newItemIds
             };
-
-            if (oldColId !== newColId) {
-              delete updatedColumns[oldColId];
-            }
           }
           newColumnIds.push(newColId);
         });
 
-        updatedRows[newRowId] = {
+        finalRows[newRowId] = {
           ...row,
           id: newRowId,
           title: `Row ${String.fromCharCode(65 + index)}`,
           columnIds: newColumnIds
         };
-
-        if (oldRowId !== newRowId) {
-          delete updatedRows[oldRowId];
-        }
       }
     });
 
     setData({
       ...data,
       rowOrder: updatedRowOrder.map((_, idx) => `r-${idx + 1}`),
-      rows: updatedRows,
-      columns: updatedColumns,
-      items: updatedItems
+      rows: finalRows,
+      columns: finalColumns,
+      items: finalItems
     });
   };
 
