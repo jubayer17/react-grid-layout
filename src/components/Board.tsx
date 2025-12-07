@@ -24,12 +24,17 @@ const Board: React.FC<BoardProps> = ({
 
     return (
         <Droppable droppableId="all-rows" type="row">
-            {(provided) => (
+            {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="p-5 w-full min-h-full box-border"
+                    className={`p-5 w-full min-h-screen box-border ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
                 >
+                    {data.rowOrder.length === 0 && !snapshot.isDraggingOver && (
+                        <div className="text-center text-gray-400 mt-20 text-lg">
+                            Drag a Row here to get started
+                        </div>
+                    )}
                     {data.rowOrder.map((rowId, idx) => {
                         const row = data.rows[rowId];
                         if (!row) return null;

@@ -7,15 +7,15 @@ const Sidebar: React.FC = () => {
         { id: 'row-container', name: 'Row', type: 'row' },
         { id: 'column-container', name: 'Column', type: 'column' },
         { id: 'text-item', name: 'Text', type: 'text' },
-        { id: 'image-item', name: 'Image', type: 'image' },
-        { id: 'email-item', name: 'Email', type: 'email' },
-        { id: 'input-item', name: 'Input', type: 'input' },
-        { id: 'name-item', name: 'Name', type: 'name' },
-        { id: 'phone-item', name: 'Phone', type: 'phone' }
+        { id: 'image-item', name: 'Image', type: 'text' },
+        { id: 'email-item', name: 'Email', type: 'text' },
+        { id: 'input-item', name: 'Input', type: 'text' },
+        { id: 'name-item', name: 'Name', type: 'text' },
+        { id: 'phone-item', name: 'Phone', type: 'text' }
     ];
 
     // group tools by category for organized display
-    const categories = ['row', 'column', 'text', 'image', 'email', 'input', 'name', 'phone'];
+    const categories = ['row', 'column', 'text'];
 
     return (
         <div className="w-60 bg-slate-800 text-white p-5 shrink-0 overflow-y-auto">

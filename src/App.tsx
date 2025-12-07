@@ -287,20 +287,84 @@ const App: React.FC = () => {
         columns: { ...data.columns, [sourceCol.id]: { ...sourceCol, itemIds: updatedItems } }
       });
     } else {
-      // moving to different column
+      // moving to different column - need to renumber items
       const sourceItems = [...sourceCol.itemIds];
       sourceItems.splice(source.index, 1);
 
       const destItems = [...destCol.itemIds];
       destItems.splice(destination.index, 0, itemId);
 
+      // renumber items in both columns
+      const updatedItems = { ...data.items };
+      const updatedColumns = { ...data.columns };
+
+      // extract row and column numbers from IDs
+      const sourceMatch = sourceCol.id.match(/r-(\d+)-c-(\d+)/);
+      const destMatch = destCol.id.match(/r-(\d+)-c-(\d+)/);
+
+      // process source column first (without deleting items yet)
+      const sourceItemsMap: Record<string, { id: string; content: string; type?: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {};
+      const newSourceItemIds: string[] = [];
+      const sourceTypeCounters: Record<string, number> = { text: 0, image: 0, email: 0, input: 0, name: 0, phone: 0 };
+      
+      sourceItems.forEach((oldItemId, index) => {
+        const newItemId = `r-${sourceMatch?.[1]}-c-${sourceMatch?.[2]}-i-${index + 1}`;
+        newSourceItemIds.push(newItemId);
+        
+        const item = updatedItems[oldItemId];
+        const itemType = item.type || 'text';
+        sourceTypeCounters[itemType]++;
+        
+        // update content based on type
+        let newContent = item.content;
+        if (itemType === 'text') newContent = `Sample Text ${sourceTypeCounters[itemType]}`;
+        else if (itemType === 'image') newContent = `Sample Image ${sourceTypeCounters[itemType]}`;
+        else if (itemType === 'email') newContent = `Email ${sourceTypeCounters[itemType]}`;
+        else if (itemType === 'input') newContent = `Input ${sourceTypeCounters[itemType]}`;
+        else if (itemType === 'name') newContent = `Name ${sourceTypeCounters[itemType]}`;
+        else if (itemType === 'phone') newContent = `Phone ${sourceTypeCounters[itemType]}`;
+        
+        sourceItemsMap[newItemId] = { ...item, id: newItemId, content: newContent };
+      });
+
+      // process destination column
+      const destItemsMap: Record<string, { id: string; content: string; type?: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {};
+      const newDestItemIds: string[] = [];
+      const destTypeCounters: Record<string, number> = { text: 0, image: 0, email: 0, input: 0, name: 0, phone: 0 };
+      
+      destItems.forEach((oldItemId, index) => {
+        const newItemId = `r-${destMatch?.[1]}-c-${destMatch?.[2]}-i-${index + 1}`;
+        newDestItemIds.push(newItemId);
+        
+        const item = updatedItems[oldItemId];
+        const itemType = item.type || 'text';
+        destTypeCounters[itemType]++;
+        
+        // update content based on type
+        let newContent = item.content;
+        if (itemType === 'text') newContent = `Sample Text ${destTypeCounters[itemType]}`;
+        else if (itemType === 'image') newContent = `Sample Image ${destTypeCounters[itemType]}`;
+        else if (itemType === 'email') newContent = `Email ${destTypeCounters[itemType]}`;
+        else if (itemType === 'input') newContent = `Input ${destTypeCounters[itemType]}`;
+        else if (itemType === 'name') newContent = `Name ${destTypeCounters[itemType]}`;
+        else if (itemType === 'phone') newContent = `Phone ${destTypeCounters[itemType]}`;
+        
+        destItemsMap[newItemId] = { ...item, id: newItemId, content: newContent };
+      });
+
+      // clear old items and add new ones
+      sourceItems.forEach(oldId => delete updatedItems[oldId]);
+      destItems.forEach(oldId => delete updatedItems[oldId]);
+      
+      Object.assign(updatedItems, sourceItemsMap, destItemsMap);
+
+      updatedColumns[sourceCol.id] = { ...sourceCol, itemIds: newSourceItemIds };
+      updatedColumns[destCol.id] = { ...destCol, itemIds: newDestItemIds };
+
       setData({
         ...data,
-        columns: {
-          ...data.columns,
-          [sourceCol.id]: { ...sourceCol, itemIds: sourceItems },
-          [destCol.id]: { ...destCol, itemIds: destItems }
-        }
+        items: updatedItems,
+        columns: updatedColumns
       });
     }
   };
@@ -618,8 +682,8 @@ const App: React.FC = () => {
             )}
           </Droppable>
 
-          {/* Accept items in trash - no type needed since Column Droppables don't specify type */}
-          <Droppable droppableId="TRASH-ITEM">
+          {/* Accept items in trash - use text type to match items */}
+          <Droppable droppableId="TRASH-ITEM" type="text">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}

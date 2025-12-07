@@ -77,7 +77,7 @@ const Column: React.FC<ColumnProps> = ({
                         </div>
                     </div>
 
-                    <Droppable droppableId={column.id}>
+                    <Droppable droppableId={column.id} type="text">
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
