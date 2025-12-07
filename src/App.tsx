@@ -411,7 +411,9 @@ const App: React.FC = () => {
 
               if (updatedItems[oldItemId]) {
                 updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
-                delete updatedItems[oldItemId];
+                if (oldItemId !== newItemId) {
+                  delete updatedItems[oldItemId];
+                }
               }
               newItemIds.push(newItemId);
             });
@@ -422,7 +424,10 @@ const App: React.FC = () => {
               title: `Column ${String.fromCharCode(65 + colIndex)}`,
               itemIds: newItemIds
             };
-            delete updatedColumns[oldColId];
+
+            if (oldColId !== newColId) {
+              delete updatedColumns[oldColId];
+            }
           }
           newColumnIds.push(newColId);
         });
@@ -433,7 +438,10 @@ const App: React.FC = () => {
           title: `Row ${String.fromCharCode(65 + index)}`,
           columnIds: newColumnIds
         };
-        delete updatedRows[oldRowId];
+
+        if (oldRowId !== newRowId) {
+          delete updatedRows[oldRowId];
+        }
       }
     });
 
@@ -477,7 +485,9 @@ const App: React.FC = () => {
 
           if (updatedItems[oldItemId]) {
             updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
-            delete updatedItems[oldItemId];
+            if (oldItemId !== newItemId) {
+              delete updatedItems[oldItemId];
+            }
           }
           newItemIds.push(newItemId);
         });
@@ -488,7 +498,11 @@ const App: React.FC = () => {
           title: `Column ${String.fromCharCode(65 + colIndex)}`,
           itemIds: newItemIds
         };
-        delete updatedCols[oldColId];
+
+        // only delete old column if ID changed
+        if (oldColId !== newColId) {
+          delete updatedCols[oldColId];
+        }
       }
       newColumnIds.push(newColId);
     });
