@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import './App.css';
 
 const App: React.FC = () => {
+  // load saved layout from session or use defaults
   const [data, _setData] = useState<InitialData>(() => {
     const saved = sessionStorage.getItem('dnd-grid-data');
     if (saved) {
@@ -19,11 +20,13 @@ const App: React.FC = () => {
     return initialData;
   });
 
+  // wrapper to auto-save whenever data changes
   const setData = (newData: InitialData) => {
     _setData(newData);
     sessionStorage.setItem('dnd-grid-data', JSON.stringify(newData));
   };
 
+  // find next available letter (A, B, C...)
   const getNextLetter = (usedLetters: Set<string>) => {
     let charCode = 65;
     while (usedLetters.has(String.fromCharCode(charCode))) {
@@ -32,17 +35,20 @@ const App: React.FC = () => {
     return String.fromCharCode(charCode);
   };
 
+  // handles all drag and drop operations
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId, type } = result;
 
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
+    // dragged from sidebar - create new element
     if (source.droppableId.startsWith('SIDEBAR-')) {
       handleSidebarDrop(draggableId, destination);
       return;
     }
 
+    // dropped in trash - delete element
     if (['TRASH', 'TRASH-COL', 'TRASH-ITEM'].includes(destination.droppableId)) {
       if (type === 'row') handleDeleteRow(draggableId);
       else if (type === 'column') handleDeleteColumn(draggableId);
@@ -56,13 +62,14 @@ const App: React.FC = () => {
   };
 
   const handleSidebarDrop = (itemType: string, destination: DraggableLocation) => {
-    const itemTypes = ['text-item', 'image-item', 'email-item', 'input-item', 'name-item', 'phone-item'];
-    if (itemTypes.includes(itemType)) {
+    const isItemType = ['text-item', 'image-item', 'email-item', 'input-item', 'name-item', 'phone-item'].includes(itemType);
+
+    // adding a new form field item
+    if (isItemType) {
       if (!destination.droppableId.startsWith('column-')) return;
 
       const col = data.columns[destination.droppableId];
-
-      const typeConfig: Record<string, { prefix: string; type: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {
+      const typeMap: Record<string, { prefix: string; type: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {
         'text-item': { prefix: 'Sample Text', type: 'text' },
         'image-item': { prefix: 'Sample Image', type: 'image' },
         'email-item': { prefix: 'Email', type: 'email' },
@@ -71,43 +78,48 @@ const App: React.FC = () => {
         'phone-item': { prefix: 'Phone', type: 'phone' }
       };
 
-      const config = typeConfig[itemType];
+      const config = typeMap[itemType];
       if (!config) return;
 
       const existingItems = col.itemIds.map(id => data.items[id]).filter(Boolean);
-      const similar = existingItems.filter(item => item.content.startsWith(config.prefix));
+      const similarItems = existingItems.filter(item => item.content.startsWith(config.prefix));
 
-      let maxNum = 0;
-      for (const item of similar) {
+      // find highest number to avoid duplicates
+      let maxNumber = 0;
+      similarItems.forEach(item => {
         const match = item.content.match(/(\d+)$/);
         if (match) {
           const num = parseInt(match[1], 10);
-          if (num > maxNum) maxNum = num;
+          if (num > maxNumber) maxNumber = num;
         }
-      }
+      });
 
       const newItem = {
         id: `item-${Date.now()}`,
-        content: `${config.prefix} ${maxNum + 1}`,
+        content: `${config.prefix} ${maxNumber + 1}`,
         type: config.type
       };
 
-      const newItemIds = [...col.itemIds];
-      newItemIds.splice(destination.index, 0, newItem.id);
+      const updatedItemIds = [...col.itemIds];
+      updatedItemIds.splice(destination.index, 0, newItem.id);
 
       setData({
         ...data,
         items: { ...data.items, [newItem.id]: newItem },
-        columns: { ...data.columns, [col.id]: { ...col, itemIds: newItemIds } }
+        columns: { ...data.columns, [col.id]: { ...col, itemIds: updatedItemIds } }
       });
+      return;
     }
-    else if (itemType === 'column-container') {
+
+    // adding a new column to a row
+    if (itemType === 'column-container') {
       if (!destination.droppableId.startsWith('row-')) return;
 
       const row = data.rows[destination.droppableId];
       const usedLetters = new Set(
         row.columnIds.map(colId => {
-          const match = data.columns[colId].title.match(/Column ([A-Z]+)/);
+          const columnTitle = data.columns[colId].title;
+          const match = columnTitle.match(/Column ([A-Z]+)/);
           return match ? match[1] : '';
         })
       );
@@ -118,21 +130,25 @@ const App: React.FC = () => {
         itemIds: []
       };
 
-      const newColumnIds = [...row.columnIds];
-      newColumnIds.splice(destination.index, 0, newColumn.id);
+      const updatedColumnIds = [...row.columnIds];
+      updatedColumnIds.splice(destination.index, 0, newColumn.id);
 
       setData({
         ...data,
         columns: { ...data.columns, [newColumn.id]: newColumn },
-        rows: { ...data.rows, [row.id]: { ...row, columnIds: newColumnIds } }
+        rows: { ...data.rows, [row.id]: { ...row, columnIds: updatedColumnIds } }
       });
+      return;
     }
-    else if (itemType === 'row-container') {
+
+    // adding a new row to the board
+    if (itemType === 'row-container') {
       if (destination.droppableId !== 'all-rows') return;
 
       const usedLetters = new Set(
         data.rowOrder.map(rowId => {
-          const match = data.rows[rowId].title.match(/Row ([A-Z]+)/);
+          const rowTitle = data.rows[rowId].title;
+          const match = rowTitle.match(/Row ([A-Z]+)/);
           return match ? match[1] : '';
         })
       );
@@ -143,81 +159,85 @@ const App: React.FC = () => {
         columnIds: []
       };
 
-      const newRowOrder = [...data.rowOrder];
-      newRowOrder.splice(destination.index, 0, newRow.id);
+      const updatedRowOrder = [...data.rowOrder];
+      updatedRowOrder.splice(destination.index, 0, newRow.id);
 
       setData({
         ...data,
         rows: { ...data.rows, [newRow.id]: newRow },
-        rowOrder: newRowOrder
+        rowOrder: updatedRowOrder
       });
     }
   };
 
   const handleRowReorder = (source: DraggableLocation, destination: DraggableLocation, rowId: string) => {
-    const newOrder = [...data.rowOrder];
-    newOrder.splice(source.index, 1);
-    newOrder.splice(destination.index, 0, rowId);
-    setData({ ...data, rowOrder: newOrder });
+    const updatedOrder = [...data.rowOrder];
+    updatedOrder.splice(source.index, 1);
+    updatedOrder.splice(destination.index, 0, rowId);
+    setData({ ...data, rowOrder: updatedOrder });
   };
 
   const handleColumnMove = (source: DraggableLocation, destination: DraggableLocation, columnId: string) => {
-    const srcRow = data.rows[source.droppableId];
-    const dstRow = data.rows[destination.droppableId];
+    const sourceRow = data.rows[source.droppableId];
+    const destRow = data.rows[destination.droppableId];
 
-    if (srcRow.id === dstRow.id) {
-      const newCols = [...srcRow.columnIds];
-      newCols.splice(source.index, 1);
-      newCols.splice(destination.index, 0, columnId);
+    // reordering within same row
+    if (sourceRow.id === destRow.id) {
+      const updatedCols = [...sourceRow.columnIds];
+      updatedCols.splice(source.index, 1);
+      updatedCols.splice(destination.index, 0, columnId);
 
       setData({
         ...data,
-        rows: { ...data.rows, [srcRow.id]: { ...srcRow, columnIds: newCols } }
+        rows: { ...data.rows, [sourceRow.id]: { ...sourceRow, columnIds: updatedCols } }
       });
     } else {
-      const srcCols = [...srcRow.columnIds];
-      srcCols.splice(source.index, 1);
+      // moving to different row
+      const sourceCols = [...sourceRow.columnIds];
+      sourceCols.splice(source.index, 1);
 
-      const dstCols = [...dstRow.columnIds];
-      dstCols.splice(destination.index, 0, columnId);
+      const destCols = [...destRow.columnIds];
+      destCols.splice(destination.index, 0, columnId);
 
       setData({
         ...data,
         rows: {
           ...data.rows,
-          [srcRow.id]: { ...srcRow, columnIds: srcCols },
-          [dstRow.id]: { ...dstRow, columnIds: dstCols }
+          [sourceRow.id]: { ...sourceRow, columnIds: sourceCols },
+          [destRow.id]: { ...destRow, columnIds: destCols }
         }
       });
     }
   };
 
   const handleItemMove = (source: DraggableLocation, destination: DraggableLocation, itemId: string) => {
-    const srcCol = data.columns[source.droppableId];
-    const dstCol = data.columns[destination.droppableId];
+    const sourceCol = data.columns[source.droppableId];
+    const destCol = data.columns[destination.droppableId];
 
-    if (srcCol.id === dstCol.id) {
-      const newItems = [...srcCol.itemIds];
-      newItems.splice(source.index, 1);
-      newItems.splice(destination.index, 0, itemId);
+    // reordering within same column
+    if (sourceCol.id === destCol.id) {
+      const updatedItems = [...sourceCol.itemIds];
+      updatedItems.splice(source.index, 1);
+      updatedItems.splice(destination.index, 0, itemId);
 
       setData({
         ...data,
-        columns: { ...data.columns, [srcCol.id]: { ...srcCol, itemIds: newItems } }
+        columns: { ...data.columns, [sourceCol.id]: { ...sourceCol, itemIds: updatedItems } }
       });
     } else {
-      const srcItems = [...srcCol.itemIds];
-      srcItems.splice(source.index, 1);
+      // moving to different column
+      const sourceItems = [...sourceCol.itemIds];
+      sourceItems.splice(source.index, 1);
 
-      const dstItems = [...dstCol.itemIds];
-      dstItems.splice(destination.index, 0, itemId);
+      const destItems = [...destCol.itemIds];
+      destItems.splice(destination.index, 0, itemId);
 
       setData({
         ...data,
         columns: {
           ...data.columns,
-          [srcCol.id]: { ...srcCol, itemIds: srcItems },
-          [dstCol.id]: { ...dstCol, itemIds: dstItems }
+          [sourceCol.id]: { ...sourceCol, itemIds: sourceItems },
+          [destCol.id]: { ...destCol, itemIds: destItems }
         }
       });
     }
@@ -234,67 +254,70 @@ const App: React.FC = () => {
   };
 
   const handleDeleteRow = (rowId: string) => {
-    const newRowOrder = data.rowOrder.filter(id => id !== rowId);
-    const newRows = { ...data.rows };
-    delete newRows[rowId];
+    const updatedRowOrder = data.rowOrder.filter(id => id !== rowId);
+    const updatedRows = { ...data.rows };
+    delete updatedRows[rowId];
 
-    newRowOrder.forEach((rId, idx) => {
-      if (newRows[rId]) {
-        newRows[rId] = {
-          ...newRows[rId],
-          title: `Row ${String.fromCharCode(65 + idx)}`
+    // rename remaining rows to keep sequence (A, B, C...)
+    updatedRowOrder.forEach((id, index) => {
+      if (updatedRows[id]) {
+        updatedRows[id] = {
+          ...updatedRows[id],
+          title: `Row ${String.fromCharCode(65 + index)}`
         };
       }
     });
 
-    setData({ ...data, rowOrder: newRowOrder, rows: newRows });
+    setData({ ...data, rowOrder: updatedRowOrder, rows: updatedRows });
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    const rowId = Object.keys(data.rows).find(rid =>
-      data.rows[rid].columnIds.includes(columnId)
+    const rowId = Object.keys(data.rows).find(id =>
+      data.rows[id].columnIds.includes(columnId)
     );
     if (!rowId) return;
 
     const row = data.rows[rowId];
-    const newColIds = row.columnIds.filter(id => id !== columnId);
-    const newCols = { ...data.columns };
-    delete newCols[columnId];
+    const updatedColIds = row.columnIds.filter(id => id !== columnId);
+    const updatedCols = { ...data.columns };
+    delete updatedCols[columnId];
 
-    newColIds.forEach((colId, idx) => {
-      if (newCols[colId]) {
-        newCols[colId] = {
-          ...newCols[colId],
-          title: `Column ${String.fromCharCode(65 + idx)}`
+    // rename remaining columns to keep sequence
+    updatedColIds.forEach((id, index) => {
+      if (updatedCols[id]) {
+        updatedCols[id] = {
+          ...updatedCols[id],
+          title: `Column ${String.fromCharCode(65 + index)}`
         };
       }
     });
 
     setData({
       ...data,
-      rows: { ...data.rows, [rowId]: { ...row, columnIds: newColIds } },
-      columns: newCols
+      rows: { ...data.rows, [rowId]: { ...row, columnIds: updatedColIds } },
+      columns: updatedCols
     });
   };
 
   const handleDeleteItem = (itemId: string) => {
-    const colId = Object.keys(data.columns).find(cid =>
-      data.columns[cid].itemIds.includes(itemId)
+    const colId = Object.keys(data.columns).find(id =>
+      data.columns[id].itemIds.includes(itemId)
     );
     if (!colId) return;
 
-    const col = data.columns[colId];
-    const newItemIds = col.itemIds.filter(id => id !== itemId);
-    const newItems = { ...data.items };
-    delete newItems[itemId];
+    const column = data.columns[colId];
+    const updatedItemIds = column.itemIds.filter(id => id !== itemId);
+    const updatedItems = { ...data.items };
+    delete updatedItems[itemId];
 
     setData({
       ...data,
-      columns: { ...data.columns, [colId]: { ...col, itemIds: newItemIds } },
-      items: newItems
+      columns: { ...data.columns, [colId]: { ...column, itemIds: updatedItemIds } },
+      items: updatedItems
     });
   };
 
+  // generate hierarchical layout structure for display
   const getLayoutData = () => {
     const layout = data.rowOrder.map(rowId => {
       const row = data.rows[rowId];
@@ -369,8 +392,9 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* modal to show item details */}
         {selectedItem && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-9999" onClick={closeModal}>
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50" onClick={closeModal}>
             <div className="bg-white text-black p-5 rounded-lg min-w-[300px] shadow-xl" onClick={e => e.stopPropagation()}>
               <h3 className="mt-0 text-slate-700">{selectedItem.type} Details</h3>
               <p><strong>ID:</strong> {selectedItem.id}</p>
@@ -384,12 +408,14 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* trash bin for deleting items */}
         <div className="fixed bottom-8 right-8 w-36 h-36 bg-red-50 border-2 border-dashed border-red-400 rounded-xl flex justify-center items-center z-50 transition-all duration-300 shadow-lg hover:scale-105 hover:bg-red-100">
           <div className="absolute text-red-500 font-bold text-sm pointer-events-none flex flex-col items-center gap-2">
             <span className="text-2xl">🗑️</span>
             DROP TO DELETE
           </div>
 
+          {/* separate droppable zones for each type */}
           <Droppable droppableId="TRASH" type="row">
             {(provided, snapshot) => (
               <div
@@ -408,8 +434,7 @@ const App: React.FC = () => {
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`absolute top-0 left-0 w-full h-full rounded-xl ${snapshot.isDraggingOver ? 'bg-red-500/15 border-2 border-red-500 shadow-[inset_0_0_20px_rgba(231,76,60,0.2)]' : ''
-                  }`}
+                className={`absolute inset-0 rounded-xl ${snapshot.isDraggingOver ? 'bg-red-500/15 border-2 border-red-500' : ''}`}
               >
                 <div style={{ display: 'none' }}>{provided.placeholder}</div>
               </div>
@@ -421,8 +446,7 @@ const App: React.FC = () => {
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`absolute top-0 left-0 w-full h-full rounded-xl ${snapshot.isDraggingOver ? 'bg-red-500/15 border-2 border-red-500 shadow-[inset_0_0_20px_rgba(231,76,60,0.2)]' : ''
-                  }`}
+                className={`absolute inset-0 rounded-xl ${snapshot.isDraggingOver ? 'bg-red-500/15 border-2 border-red-500' : ''}`}
               >
                 <div style={{ display: 'none' }}>{provided.placeholder}</div>
               </div>
