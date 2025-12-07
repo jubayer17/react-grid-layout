@@ -2,6 +2,7 @@ import React from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 
 const Sidebar: React.FC = () => {
+    // available tools that can be dragged to the canvas
     const tools = [
         { id: 'row-container', name: 'Row', type: 'row' },
         { id: 'column-container', name: 'Column', type: 'column' },
@@ -13,6 +14,7 @@ const Sidebar: React.FC = () => {
         { id: 'phone-item', name: 'Phone', type: 'item' }
     ];
 
+    // group tools by category for organized display
     const categories = ['row', 'column', 'item'];
 
     return (
@@ -32,12 +34,12 @@ const Sidebar: React.FC = () => {
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
-                                                className={`p-3 mb-2 bg-white/10 border border-white/20 rounded cursor-grab flex items-center justify-center select-none hover:bg-white/15 ${snapshot.isDragging ? 'bg-white/25 border-white/40' : ''
-                                                    }`}
+                                                className={`p-3 mb-2 bg-white/10 border border-white/20 rounded cursor-grab flex items-center justify-center select-none hover:bg-white/15 ${snapshot.isDragging ? 'bg-white/25 border-white/40' : ''}`}
                                                 style={provided.draggableProps.style}
                                             >
                                                 <span>{tool.name}</span>
                                             </div>
+                                            {/* show placeholder when dragging */}
                                             {snapshot.isDragging && (
                                                 <div className="p-3 mb-2 bg-white/10 border border-white/20 border-dashed rounded flex items-center justify-center opacity-40">
                                                     <span>{tool.name}</span>
