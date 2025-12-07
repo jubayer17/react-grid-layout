@@ -213,7 +213,7 @@ const App: React.FC = () => {
 
       // rename columns in both rows
       const updatedColumns = { ...data.columns };
-      
+
       sourceCols.forEach((colId, index) => {
         if (updatedColumns[colId]) {
           updatedColumns[colId] = {
