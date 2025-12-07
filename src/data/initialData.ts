@@ -19,7 +19,7 @@ export const initialData: InitialData = {
         },
         'column-3': {
             id: 'column-3',
-            title: 'Column C (empty)',
+            title: 'Column A',
             itemIds: [],
         },
     },
