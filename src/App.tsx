@@ -386,12 +386,12 @@ const App: React.FC = () => {
     // update content numbers for each type
     Object.keys(itemsByType).forEach(type => {
       const typePrefix = type === 'text' ? 'Sample Text' :
-                        type === 'image' ? 'Sample Image' :
-                        type === 'email' ? 'Email' :
-                        type === 'input' ? 'Input' :
-                        type === 'name' ? 'Name' :
-                        type === 'phone' ? 'Phone' : 'Item';
-      
+        type === 'image' ? 'Sample Image' :
+          type === 'email' ? 'Email' :
+            type === 'input' ? 'Input' :
+              type === 'name' ? 'Name' :
+                type === 'phone' ? 'Phone' : 'Item';
+
       itemsByType[type].forEach((id, index) => {
         updatedItems[id] = {
           ...updatedItems[id],
