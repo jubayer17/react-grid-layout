@@ -66,7 +66,7 @@ const App: React.FC = () => {
 
     // adding a new form field item
     if (isItemType) {
-      if (!destination.droppableId.startsWith('column-')) return;
+      if (!destination.droppableId.startsWith('r-')) return;
 
       const col = data.columns[destination.droppableId];
       const typeMap: Record<string, { prefix: string; type: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {
@@ -94,8 +94,20 @@ const App: React.FC = () => {
         }
       });
 
+      // extract row and column numbers for proper ID
+      const colMatch = destination.droppableId.match(/r-(\d+)-c-(\d+)/);
+      const rowNum = colMatch?.[1] || '1';
+      const colNum = colMatch?.[2] || '1';
+
+      // find next item number in this column
+      const itemNumbers = col.itemIds.map(itemId => {
+        const match = itemId.match(/i-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      const nextItemNum = Math.max(0, ...itemNumbers) + 1;
+
       const newItem = {
-        id: `item-${Date.now()}`,
+        id: `r-${rowNum}-c-${colNum}-i-${nextItemNum}`,
         content: `${config.prefix} ${maxNumber + 1}`,
         type: config.type
       };
@@ -113,9 +125,18 @@ const App: React.FC = () => {
 
     // adding a new column to a row
     if (itemType === 'column-container') {
-      if (!destination.droppableId.startsWith('row-')) return;
+      if (!destination.droppableId.startsWith('r-')) return;
 
       const row = data.rows[destination.droppableId];
+      const rowNum = destination.droppableId.match(/r-(\d+)/)?.[1] || '1';
+
+      // find next column number for this row
+      const colNumbers = row.columnIds.map(colId => {
+        const match = colId.match(/c-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      const nextColNum = Math.max(0, ...colNumbers) + 1;
+
       const usedLetters = new Set(
         row.columnIds.map(colId => {
           const columnTitle = data.columns[colId].title;
@@ -125,7 +146,7 @@ const App: React.FC = () => {
       );
 
       const newColumn = {
-        id: `column-${Date.now()}`,
+        id: `r-${rowNum}-c-${nextColNum}`,
         title: `Column ${getNextLetter(usedLetters)}`,
         itemIds: []
       };
@@ -145,6 +166,13 @@ const App: React.FC = () => {
     if (itemType === 'row-container') {
       if (destination.droppableId !== 'all-rows') return;
 
+      // find next row number
+      const rowNumbers = data.rowOrder.map(rowId => {
+        const match = rowId.match(/r-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      const nextRowNum = Math.max(0, ...rowNumbers) + 1;
+
       const usedLetters = new Set(
         data.rowOrder.map(rowId => {
           const rowTitle = data.rows[rowId].title;
@@ -154,7 +182,7 @@ const App: React.FC = () => {
       );
 
       const newRow = {
-        id: `row-${Date.now()}`,
+        id: `r-${nextRowNum}`,
         title: `Row ${getNextLetter(usedLetters)}`,
         columnIds: []
       };
