@@ -306,15 +306,15 @@ const App: React.FC = () => {
       const sourceItemsMap: Record<string, { id: string; content: string; type?: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {};
       const newSourceItemIds: string[] = [];
       const sourceTypeCounters: Record<string, number> = { text: 0, image: 0, email: 0, input: 0, name: 0, phone: 0 };
-      
+
       sourceItems.forEach((oldItemId, index) => {
         const newItemId = `r-${sourceMatch?.[1]}-c-${sourceMatch?.[2]}-i-${index + 1}`;
         newSourceItemIds.push(newItemId);
-        
+
         const item = updatedItems[oldItemId];
         const itemType = item.type || 'text';
         sourceTypeCounters[itemType]++;
-        
+
         // update content based on type
         let newContent = item.content;
         if (itemType === 'text') newContent = `Sample Text ${sourceTypeCounters[itemType]}`;
@@ -323,7 +323,7 @@ const App: React.FC = () => {
         else if (itemType === 'input') newContent = `Input ${sourceTypeCounters[itemType]}`;
         else if (itemType === 'name') newContent = `Name ${sourceTypeCounters[itemType]}`;
         else if (itemType === 'phone') newContent = `Phone ${sourceTypeCounters[itemType]}`;
-        
+
         sourceItemsMap[newItemId] = { ...item, id: newItemId, content: newContent };
       });
 
@@ -331,15 +331,15 @@ const App: React.FC = () => {
       const destItemsMap: Record<string, { id: string; content: string; type?: 'text' | 'image' | 'email' | 'input' | 'name' | 'phone' }> = {};
       const newDestItemIds: string[] = [];
       const destTypeCounters: Record<string, number> = { text: 0, image: 0, email: 0, input: 0, name: 0, phone: 0 };
-      
+
       destItems.forEach((oldItemId, index) => {
         const newItemId = `r-${destMatch?.[1]}-c-${destMatch?.[2]}-i-${index + 1}`;
         newDestItemIds.push(newItemId);
-        
+
         const item = updatedItems[oldItemId];
         const itemType = item.type || 'text';
         destTypeCounters[itemType]++;
-        
+
         // update content based on type
         let newContent = item.content;
         if (itemType === 'text') newContent = `Sample Text ${destTypeCounters[itemType]}`;
@@ -348,14 +348,14 @@ const App: React.FC = () => {
         else if (itemType === 'input') newContent = `Input ${destTypeCounters[itemType]}`;
         else if (itemType === 'name') newContent = `Name ${destTypeCounters[itemType]}`;
         else if (itemType === 'phone') newContent = `Phone ${destTypeCounters[itemType]}`;
-        
+
         destItemsMap[newItemId] = { ...item, id: newItemId, content: newContent };
       });
 
       // clear old items and add new ones
       sourceItems.forEach(oldId => delete updatedItems[oldId]);
       destItems.forEach(oldId => delete updatedItems[oldId]);
-      
+
       Object.assign(updatedItems, sourceItemsMap, destItemsMap);
 
       updatedColumns[sourceCol.id] = { ...sourceCol, itemIds: newSourceItemIds };
