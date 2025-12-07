@@ -36,7 +36,7 @@ export const initialData: InitialData = {
         },
         'r-3': {
             id: 'r-3',
-            title: 'Row C (empty)',
+            title: 'Row C',
             columnIds: [],
         },
     },
