@@ -320,7 +320,7 @@ const App: React.FC = () => {
     const updatedRows = { ...data.rows };
     const updatedColumns = { ...data.columns };
     const updatedItems = { ...data.items };
-    
+
     delete updatedRows[rowId];
 
     // renumber rows and update all related IDs
@@ -328,30 +328,30 @@ const App: React.FC = () => {
     updatedRowOrder.forEach((oldRowId, index) => {
       const newRowId = `r-${index + 1}`;
       rowIdMap[oldRowId] = newRowId;
-      
+
       if (updatedRows[oldRowId]) {
         const row = updatedRows[oldRowId];
         const newColumnIds: string[] = [];
-        
+
         // update column IDs for this row
         row.columnIds.forEach((oldColId, colIndex) => {
           const newColId = `${newRowId}-c-${colIndex + 1}`;
-          
+
           if (updatedColumns[oldColId]) {
             const col = updatedColumns[oldColId];
             const newItemIds: string[] = [];
-            
+
             // update item IDs for this column
             col.itemIds.forEach((oldItemId, itemIndex) => {
               const newItemId = `${newColId}-i-${itemIndex + 1}`;
-              
+
               if (updatedItems[oldItemId]) {
                 updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
                 delete updatedItems[oldItemId];
               }
               newItemIds.push(newItemId);
             });
-            
+
             updatedColumns[newColId] = {
               ...col,
               id: newColId,
@@ -362,7 +362,7 @@ const App: React.FC = () => {
           }
           newColumnIds.push(newColId);
         });
-        
+
         updatedRows[newRowId] = {
           ...row,
           id: newRowId,
@@ -392,32 +392,32 @@ const App: React.FC = () => {
     const updatedColIds = row.columnIds.filter(id => id !== columnId);
     const updatedCols = { ...data.columns };
     const updatedItems = { ...data.items };
-    
+
     delete updatedCols[columnId];
 
     // extract row number
     const rowNum = rowId.match(/r-(\d+)/)?.[1] || '1';
-    
+
     // renumber columns and items
     const newColumnIds: string[] = [];
     updatedColIds.forEach((oldColId, colIndex) => {
       const newColId = `r-${rowNum}-c-${colIndex + 1}`;
-      
+
       if (updatedCols[oldColId]) {
         const col = updatedCols[oldColId];
         const newItemIds: string[] = [];
-        
+
         // update item IDs
         col.itemIds.forEach((oldItemId, itemIndex) => {
           const newItemId = `${newColId}-i-${itemIndex + 1}`;
-          
+
           if (updatedItems[oldItemId]) {
             updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
             delete updatedItems[oldItemId];
           }
           newItemIds.push(newItemId);
         });
-        
+
         updatedCols[newColId] = {
           ...col,
           id: newColId,
@@ -453,7 +453,7 @@ const App: React.FC = () => {
     updatedItemIds.forEach((oldItemId, index) => {
       const colPrefix = colId.match(/(r-\d+-c-\d+)/)?.[1] || colId;
       const newItemId = `${colPrefix}-i-${index + 1}`;
-      
+
       if (updatedItems[oldItemId]) {
         updatedItems[newItemId] = { ...updatedItems[oldItemId], id: newItemId };
         delete updatedItems[oldItemId];
@@ -475,12 +475,12 @@ const App: React.FC = () => {
     // update content numbers for each type
     Object.keys(itemsByType).forEach(type => {
       const typePrefix = type === 'text' ? 'Sample Text' :
-                        type === 'image' ? 'Sample Image' :
-                        type === 'email' ? 'Email' :
-                        type === 'input' ? 'Input' :
-                        type === 'name' ? 'Name' :
-                        type === 'phone' ? 'Phone' : 'Item';
-      
+        type === 'image' ? 'Sample Image' :
+          type === 'email' ? 'Email' :
+            type === 'input' ? 'Input' :
+              type === 'name' ? 'Name' :
+                type === 'phone' ? 'Phone' : 'Item';
+
       itemsByType[type].forEach((id, index) => {
         updatedItems[id] = {
           ...updatedItems[id],
